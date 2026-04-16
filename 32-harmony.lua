@@ -16,9 +16,20 @@ math.randomseed(os.time())
 random_scale_degrees = false
 
 shift = false
+local shift = false
+local viz = {
+   rate = 0,
+   ampL = 0,
+   ampR = 0,
+   phase = 0,
+   separation = 1.0,
+   size = 0.0,
+   quant = 0
+}
 
 local ampL_poll = nil
 local ampR_poll = nil
+local viz_clock
 
 local function sr(n)
   return 2 ^(n/12)
@@ -191,15 +202,8 @@ function init()
   ampR_poll.time = 1/30
   ampR_poll:start()
 
-  viz = {
-    rate = params:get("rate"),
-    ampL = 0,
-    ampR = 0,
-    phase = 0,
-    separation = 1.0,
-    size = 0.0,
-    quant = params:get("rate")
-  }
+  viz.rate = params:get("rate")
+  viz.quant = params:get("rate")
 
   viz_clock = metro.init()
   viz_clock.time = 1 / 30
