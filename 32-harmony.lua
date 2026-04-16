@@ -185,21 +185,14 @@ function init()
   end
   ampL_poll.time = 1/30
   ampL_poll:start()
-  
+
   ampR_poll = poll.set("amp_out_r")
   ampR_poll.callback = function(v)
     viz.ampR = v
   end
   ampR_poll.time = 1/30
   ampR_poll:start()
-  
-  ampL_poll.time = 1 / 30
-  ampR_poll.time = 1 / 30
-  
-  ampL_poll:start()
-  ampR_poll:start()
-  
-    
+
   viz = {
     rate = params:get("rate"),
     ampL = 0,
