@@ -1,10 +1,10 @@
 -- -- -- -- -- -- -- 32-harmony -- -- -- -- -- -- -
 --
 -- is a random sequencer
--- 
--- 
--- 
--- 
+--
+--
+--
+--
 -- -- -- ynomrah-23 -- -- -- -- -- -- -- -- -- -- -
 
 engine.name = "32Harmony"
@@ -13,14 +13,22 @@ math.randomseed(os.time())
 
 -- set this to true for limitless exploration
 -- beware: it's dark out there
-random_scale_degrees = false
+local random_scale_degrees = false
 
-shift = false
+local shift = false
+local viz = {
+   rate = 0,
+   ampL = 0,
+   ampR = 0,
+   phase = 0,
+   separation = 1.0,
+   size = 0.0,
+   quant = 0
+}
 
-local ampL = 0
-local ampR = 0
 local ampL_poll = nil
 local ampR_poll = nil
+local viz_clock
 
 local function sr(n)
   return 2 ^(n/12)
@@ -74,17 +82,11 @@ local scales = {scale(0,2,4,7,9),
 
 local current_scale = 1
 
-local function clamp(x, lo, hi)
-  if x < lo then return lo end
-  if x > hi then return hi end
-  return x
-end
-
 local function norm_rate(rate)
   local min_rate = 0.1
   local max_rate = 20000
   local t = math.log(rate / min_rate) / math.log(max_rate / min_rate)
-  return clamp(t, 0, 1)
+  return util.clamp(t, 0, 1)
 end
 
 local function rate_to_display(rate)
@@ -95,14 +97,14 @@ local function rate_to_display(rate)
   return orbit_hz, separation, size
 end
 
-function amp_to_level(amp)
+local function amp_to_level(amp)
     if amp > 0.0041 then
-      amp = clamp(64*amp, 0, 1)
+      amp = util.clamp(64*amp, 0, 1)
     end
     return math.floor(amp * 15) -- 0..15
 end
 
-function update_binary_stars(dt)
+local function update_binary_stars(dt)
   local orbit_hz, separation, size = rate_to_display(viz.rate)
 
   viz.phase = (viz.phase + 2 * math.pi * orbit_hz * dt) % (2 * math.pi)
@@ -111,11 +113,11 @@ function update_binary_stars(dt)
 
 end
 
-function draw_binary_stars()
+local function draw_binary_stars()
   local cx = 96
   local cy = 16
   local orbit_r = 12
-  
+
   local phase = viz.phase
   local r2_factor = ((3.9038*viz.quant^2) - (6.8087*viz.quant) + 3.9048)
   local sep_r1 = orbit_r * viz.separation
@@ -174,7 +176,7 @@ function init()
     viz.quant = x
     engine.quantAmtIn(y)
   end)
-  
+
   params:set_action("cutoff", function(x)
     engine.lpfCutoffIn(x)
   end)
@@ -184,37 +186,23 @@ function init()
     engine.rate1In(x)
     engine.rate2In(x)
   end)
-  
+
   ampL_poll = poll.set("amp_out_l")
   ampL_poll.callback = function(v)
     viz.ampL = v
   end
   ampL_poll.time = 1/30
   ampL_poll:start()
-  
+
   ampR_poll = poll.set("amp_out_r")
   ampR_poll.callback = function(v)
     viz.ampR = v
   end
   ampR_poll.time = 1/30
   ampR_poll:start()
-  
-  ampL_poll.time = 1 / 30
-  ampR_poll.time = 1 / 30
-  
-  ampL_poll:start()
-  ampR_poll:start()
-  
-    
-  viz = {
-    rate = params:get("rate"),
-    ampL = 0,
-    ampR = 0,
-    phase = 0,
-    separation = 1.0,
-    size = 0.0,
-    quant = params:get("rate")
-  }
+
+  viz.rate = params:get("rate")
+  viz.quant = params:get("rate")
 
   viz_clock = metro.init()
   viz_clock.time = 1 / 30
@@ -223,11 +211,7 @@ function init()
     redraw()
   end
   viz_clock:start()
-  
-  clock.run(function()
-    clock.sleep(0.25)
-    params:bang()
-  end)
+
   redraw()
 end
 
@@ -252,7 +236,7 @@ function enc(n, d)
   redraw()
 end
 
-function init_scale()
+local function init_scale()
   engine.step0In(semitones_init[1])
   engine.step1In(semitones_init[3])
   engine.step2In(semitones_init[5])
@@ -260,7 +244,7 @@ function init_scale()
   engine.step4In(semitones_init[10])
 end
 
-function rand_scale()
+local function rand_scale()
   local d1,d2,d3,d4,d5
   local r
   if random_scale_degrees then
@@ -306,7 +290,7 @@ function key(n, z)
       engine.freqMultIn(1)
     end
   end
-  
+
   redraw()
 end
 
