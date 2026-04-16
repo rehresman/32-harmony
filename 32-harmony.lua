@@ -217,11 +217,7 @@ function init()
     redraw()
   end
   viz_clock:start()
-  
-  clock.run(function()
-    clock.sleep(0.25)
-    params:bang()
-  end)
+
   redraw()
 end
 
