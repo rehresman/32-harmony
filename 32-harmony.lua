@@ -17,8 +17,6 @@ random_scale_degrees = false
 
 shift = false
 
-local ampL = 0
-local ampR = 0
 local ampL_poll = nil
 local ampR_poll = nil
 
