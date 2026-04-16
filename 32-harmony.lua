@@ -74,17 +74,11 @@ local scales = {scale(0,2,4,7,9),
 
 local current_scale = 1
 
-local function clamp(x, lo, hi)
-  if x < lo then return lo end
-  if x > hi then return hi end
-  return x
-end
-
 local function norm_rate(rate)
   local min_rate = 0.1
   local max_rate = 20000
   local t = math.log(rate / min_rate) / math.log(max_rate / min_rate)
-  return clamp(t, 0, 1)
+  return util.clamp(t, 0, 1)
 end
 
 local function rate_to_display(rate)
@@ -97,7 +91,7 @@ end
 
 function amp_to_level(amp)
     if amp > 0.0041 then
-      amp = clamp(64*amp, 0, 1)
+      amp = util.clamp(64*amp, 0, 1)
     end
     return math.floor(amp * 15) -- 0..15
 end
