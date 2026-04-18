@@ -16,7 +16,8 @@ math.randomseed(os.time())
 random_scale_degrees = false
 
 shift = false
-
+local pitchMult = 0.1
+local cutoffMult = 0.5
 local ampL = 0
 local ampR = 0
 local ampL_poll = nil
@@ -237,11 +238,11 @@ function enc(n, d)
     elseif n == 2 then
       params:delta("rate", d)
     elseif n == 3 then
-      params:delta("cutoff", d)
+      params:delta("cutoff", d*cutoffMult)
     end
   else
     if n == 1 then
-      params:delta("pitch", d)
+      params:delta("pitch", d*pitchMult)
     elseif n == 2 then
       params:delta("decay", d)
     elseif n == 3 then

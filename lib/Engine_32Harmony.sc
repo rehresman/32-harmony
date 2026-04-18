@@ -142,7 +142,7 @@ Engine_32Harmony : CroneEngine {
 			randOct = TIRand.ar(1,range,randClock);
 			scale = Drand([step0, step1, step2, step3, step4],inf);
 
-			freq = Lag.kr(root) * freqMult;
+			freq = Lag.kr(root,0.18) * freqMult;
 			freq = freq * (Demand.ar(randClock, 0, scale) * (2 ** randOct));
 			env = EnvGen.ar(envelope: Env.perc(attack, decay, 1), gate: randClock);
 			sig = SinOsc.ar(freq);
@@ -156,7 +156,7 @@ Engine_32Harmony : CroneEngine {
 			var sig;
 			sig = [In.ar(oscOutL, 1), In.ar(oscOutR,1)];
 			sig = HPF.ar(sig, hpfCutoff);
-			sig = LPF.ar(sig, Lag.kr(lpfCutoff));
+			sig = LPF.ar(sig, Lag.kr(lpfCutoff,0.18));
 			Out.ar(outBus, sig);
 		}).add;
 
