@@ -64,3 +64,5 @@ k3 - V chord
 
 
 
+**parameters page**
+attack

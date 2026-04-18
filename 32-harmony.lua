@@ -149,6 +149,7 @@ end
 
 function init()
   params:add_control("pitch", "pitch", controlspec.new(20, 2000, 'exp', 0, 32.7, 'hz'))
+  params:add_control("attack", "attack", controlspec.new(0.01, 12, 'exp', 0, 0.01, 's'))
   params:add_control("decay", "decay", controlspec.new(0.01, 12, 'exp', 0, 3.5, 's'))
   params:add_control("range", "range", controlspec.new(1, 9, 'lin', 1, 4, 'oct'))
 
@@ -159,16 +160,14 @@ function init()
   params:set_action("pitch", function(x)
     engine.rootIn(x)
   end)
+  
+  params:set_action("attack", function(x)
+    engine.attackIn(x)
+  end)
 
   params:set_action("decay", function(x)
     engine.decayIn(x)
   end)
-
-  params:set_action("range", function(x)
-    engine.range1In(x)
-    engine.range2In(x)
-  end)
-
   params:set_action("quantize", function(x)
     local y = math.atan(50*x)/math.atan(50)
     viz.quant = x

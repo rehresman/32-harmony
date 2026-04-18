@@ -3,7 +3,7 @@ Engine_32Harmony : CroneEngine {
 	// audio buses
 	var clock1Out, clock2Out, oscOutL, oscOutR, filterOut;
 	// control buses
-	var <>rate1In, <>rate2In, <>rootIn, <>range1In, <>range2In, <>decayIn, <>lpfCutoffIn, <>hpfCutoffIn;
+	var <>rate1In, <>rate2In, <>rootIn, <>range1In, <>range2In, <>attackIn, <>decayIn, <>lpfCutoffIn, <>hpfCutoffIn;
 	var <>quantAmtIn, <>step0In, <>step1In, <>step2In, <>step3In, <>step4In, freqOutL, freqOutR;
 	var freqMultIn;
 	var createNodes, modGrp, audioGrp;
@@ -47,6 +47,7 @@ Engine_32Harmony : CroneEngine {
 		rootIn = Bus.control(s,1);
 		range1In = Bus.control(s,1);
 		range2In = Bus.control(s,1);
+		attackIn = Bus.control(s,1);
 		decayIn = Bus.control(s,1);
 		lpfCutoffIn = Bus.control(s,1);
 		hpfCutoffIn = Bus.control(s,1);
@@ -67,6 +68,7 @@ Engine_32Harmony : CroneEngine {
 			\rootIn -> (bus: rootIn),
 			\range1In -> (bus: range1In),
 			\range2In -> (bus: range2In),
+			\attackIn -> (bus: attackIn),
 			\decayIn -> (bus: decayIn),
 			\lpfCutoffIn -> (bus: lpfCutoffIn),
 			\hpfCutoffIn -> (bus: hpfCutoffIn),
@@ -87,6 +89,7 @@ Engine_32Harmony : CroneEngine {
 		range1In.set(4);
 		range2In.set(4);
 		rootIn.set(32.7);
+		attackIn.set(0.01);
 		decayIn.set(3.5);
 		lpfCutoffIn.set(4000);
 		hpfCutoffIn.set(20);
@@ -121,6 +124,7 @@ Engine_32Harmony : CroneEngine {
 		SynthDef(\rando, {|outBus, rate, root, clockBus, quantAmt, rangeBus, freqBus|
 			var freq, sig, pitches, timing, env, randOct, scale;
 			var randClock = In.ar(clockBus);
+			var attack = In.kr(attackIn, 1);
 			var decay = In.kr(decayIn, 1);
 			var range = In.kr(rangeBus, 1);
 			var step0Quant = In.kr(step0In, 1);
@@ -140,7 +144,7 @@ Engine_32Harmony : CroneEngine {
 
 			freq = Lag.kr(root) * freqMult;
 			freq = freq * (Demand.ar(randClock, 0, scale) * (2 ** randOct));
-			env = EnvGen.ar(envelope: Env.perc(0.01, decay, 1), gate: randClock);
+			env = EnvGen.ar(envelope: Env.perc(attack, decay, 1), gate: randClock);
 			sig = SinOsc.ar(freq);
 			sig = sig * env * 0.04;
 			Out.ar(outBus, sig);
