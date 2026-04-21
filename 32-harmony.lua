@@ -169,6 +169,12 @@ function init()
   params:set_action("decay", function(x)
     engine.decayIn(x)
   end)
+  
+  params:set_action("range", function(x)
+    engine.range1In(x)
+    engine.range2In(x)
+  end)
+  
   params:set_action("quantize", function(x)
     local y = math.atan(50*x)/math.atan(50)
     viz.quant = x
