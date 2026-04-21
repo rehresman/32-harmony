@@ -132,11 +132,11 @@ Engine_32Harmony : CroneEngine {
 			var step2Quant = In.kr(step2In, 1);
 			var step3Quant = In.kr(step3In, 1);
 			var step4Quant = In.kr(step4In, 1);
-			var step0 = SelectX.ar(quantAmt, [TRand.ar(1.0,2.0,randClock), K2A.ar(step0Quant)]);
-			var step1 = SelectX.ar(quantAmt, [TRand.ar(1.0,2.0,randClock), K2A.ar(step1Quant)]);
-			var step2 = SelectX.ar(quantAmt, [TRand.ar(1.0,2.0,randClock), K2A.ar(step2Quant)]);
-			var step3 = SelectX.ar(quantAmt, [TRand.ar(1.0,2.0,randClock), K2A.ar(step3Quant)]);
-			var step4 = SelectX.ar(quantAmt, [TRand.ar(1.0,2.0,randClock), K2A.ar(step4Quant)]);
+			var step0 = SelectX.kr(quantAmt, [TRand.ar(1.0,2.0,randClock), K2A.ar(step0Quant)]);
+			var step1 = SelectX.kr(quantAmt, [TRand.ar(1.0,2.0,randClock), K2A.ar(step1Quant)]);
+			var step2 = SelectX.kr(quantAmt, [TRand.ar(1.0,2.0,randClock), K2A.ar(step2Quant)]);
+			var step3 = SelectX.kr(quantAmt, [TRand.ar(1.0,2.0,randClock), K2A.ar(step3Quant)]);
+			var step4 = SelectX.kr(quantAmt, [TRand.ar(1.0,2.0,randClock), K2A.ar(step4Quant)]);
 
 			var freqMult = In.kr(freqMultIn, 1);
 			randOct = TIRand.ar(1,range,randClock);
