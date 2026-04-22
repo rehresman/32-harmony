@@ -1,9 +1,9 @@
 -- -- -- -- -- -- -- 32-harmony -- -- -- -- -- -- -
 --
 -- is a random sequencer
--- 
--- 
--- 
+-- chord generator
+-- noise source
+-- quantizable to pentatonics
 -- 
 -- -- -- ynomrah-23 -- -- -- -- -- -- -- -- -- -- -
 
@@ -18,6 +18,7 @@ random_scale_degrees = false
 shift = false
 local pitchMult = 0.1
 local cutoffMult = 0.5
+
 local ampL = 0
 local ampR = 0
 local ampL_poll = nil
@@ -150,13 +151,20 @@ end
 
 function init()
   params:add_control("pitch", "pitch", controlspec.new(20, 2000, 'exp', 0, 32.7, 'hz'))
-  params:add_control("attack", "attack", controlspec.new(0.01, 12, 'exp', 0, 0.01, 's'))
   params:add_control("decay", "decay", controlspec.new(0.01, 12, 'exp', 0, 3.5, 's'))
   params:add_control("range", "range", controlspec.new(1, 9, 'lin', 1, 4, 'oct'))
 
   params:add_control("quantize", "quantize", controlspec.new(0, 1, 'lin', 0, 0.6))
   params:add_control("rate", "rate", controlspec.new(0.1, 20000, 'exp', 0, 1, 'hz'))
   params:add_control("cutoff", "cutoff", controlspec.new(20, 20000, 'exp', 0, 4000, 'hz'))
+
+  -- advanced controls for params menu
+  params:add_control("attack", "attack", controlspec.new(0.01, 12, 'exp', 0, 0.01, 's'))
+  params:add_control("saturation", "saturation", controlspec.new(0.1,300, 'exp', 0, 1))
+  params:add_control("range1", "range1", controlspec.new(1, 9, 'lin', 1, 4, 'oct'))
+  params:add_control("range2", "range2", controlspec.new(1, 9, 'lin', 1, 4, 'oct'))
+  params:add_control("rate1", "rate1", controlspec.new(0.1, 20000, 'exp', 0, 1, 'hz'))
+  params:add_control("rate2", "rate2", controlspec.new(0.1, 20000, 'exp', 0, 1, 'hz'))
 
   params:set_action("pitch", function(x)
     engine.rootIn(x)
@@ -169,16 +177,28 @@ function init()
   params:set_action("decay", function(x)
     engine.decayIn(x)
   end)
-  
+
   params:set_action("range", function(x)
     engine.range1In(x)
     engine.range2In(x)
   end)
   
+  params:set_action("range1", function(x)
+    engine.range1In(x)
+  end)
+  
+  params:set_action("range2", function(x)
+    engine.range2In(x)
+  end)
+
   params:set_action("quantize", function(x)
     local y = math.atan(50*x)/math.atan(50)
     viz.quant = x
     engine.quantAmtIn(y)
+  end)
+  
+  params:set_action("saturation", function(x)
+    engine.saturationAmtIn(x)
   end)
   
   params:set_action("cutoff", function(x)
@@ -188,6 +208,16 @@ function init()
   params:set_action("rate", function(x)
     viz.rate = x
     engine.rate1In(x)
+    engine.rate2In(x)
+  end)
+  
+  params:set_action("rate1", function(x)
+    viz.rate = x
+    engine.rate1In(x)
+  end)
+  
+  params:set_action("rate2", function(x)
+    viz.rate = x
     engine.rate2In(x)
   end)
   
@@ -204,13 +234,6 @@ function init()
   end
   ampR_poll.time = 1/30
   ampR_poll:start()
-  
-  ampL_poll.time = 1 / 30
-  ampR_poll.time = 1 / 30
-  
-  ampL_poll:start()
-  ampR_poll:start()
-  
     
   viz = {
     rate = params:get("rate"),
@@ -229,12 +252,6 @@ function init()
     redraw()
   end
   viz_clock:start()
-  
-  clock.run(function()
-    clock.sleep(0.25)
-    params:bang()
-  end)
-  redraw()
 end
 
 function enc(n, d)
@@ -255,7 +272,6 @@ function enc(n, d)
       params:delta("range", d)
     end
   end
-  redraw()
 end
 
 function init_scale()
@@ -312,8 +328,6 @@ function key(n, z)
       engine.freqMultIn(1)
     end
   end
-  
-  redraw()
 end
 
 function draw_low_control_block(x, y, slot)

@@ -1,11 +1,11 @@
 Engine_32Harmony : CroneEngine {
-	classvar root, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, polyphony;
+	classvar root, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, polyphony, <current;
 	// audio buses
-	var clock1Out, clock2Out, oscOutL, oscOutR, filterOut;
+	var clock1Out, clock2Out, oscOutL, oscOutR, <filterOut;
 	// control buses
 	var <>rate1In, <>rate2In, <>rootIn, <>range1In, <>range2In, <>attackIn, <>decayIn, <>lpfCutoffIn, <>hpfCutoffIn;
 	var <>quantAmtIn, <>step0In, <>step1In, <>step2In, <>step3In, <>step4In, freqOutL, freqOutR;
-	var freqMultIn;
+	var freqMultIn, saturationAmtIn;
 	var createNodes, modGrp, audioGrp;
 	var <clock1, <clock2, <leftSources, <rightSources, <filters, <saturation;
 	var s, paramMap;
@@ -16,6 +16,7 @@ Engine_32Harmony : CroneEngine {
 
 	alloc {
 		s = context.server;
+		current = this;
 
 		// intervals
 		root = 1;
@@ -30,11 +31,11 @@ Engine_32Harmony : CroneEngine {
 		s9 = 2 ** (9/12);
 		s10 = 2 ** (10/12);
 		s11 = 2 ** (11/12);
-		
+
 		// remember to update the \clock SynthDef's hardcoded outbus param to match!
 		polyphony = 16; // per output channel
 		// remember to update the \clock SynthDef's hardcoded outbus param to match!
-		
+
 		// Audio Buses
 		clock1Out = Array.fill(polyphony, {Bus.audio(s,1)});
 		clock2Out = Array.fill(polyphony, {Bus.audio(s,1)});
@@ -60,6 +61,7 @@ Engine_32Harmony : CroneEngine {
 		freqOutL = Bus.control(s,1);
 		freqOutR = Bus.control(s,1);
 		freqMultIn = Bus.control(s,1);
+		saturationAmtIn = Bus.control(s,1);
 
 		// norns control
 		paramMap = IdentityDictionary[
@@ -80,7 +82,8 @@ Engine_32Harmony : CroneEngine {
 			\step4In -> (bus: step4In),
 			\freqOutL -> (bus: freqOutL),
 			\freqOutR -> (bus: freqOutR),
-			\freqMultIn -> (bus: freqMultIn)
+			\freqMultIn -> (bus: freqMultIn),
+			\saturationAmtIn -> (bus: saturationAmtIn)
 		];
 
 		// Initialize Buses
@@ -102,24 +105,25 @@ Engine_32Harmony : CroneEngine {
 		freqOutL.set(0);
 		freqOutR.set(0);
 		freqMultIn.set(1);
+		saturationAmtIn.set(1);
 		s.sync;
 
 		// Create SynthDefs
-    
-    SynthDef(\clock, { |rate = 1, outBuses = #[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]|
-    		var rand, index, sigs;
-    
-    		rand = Dust.ar(rate);
-    		index = Stepper.ar(rand, 0, 0, polyphony-1, 1, 0);
-    		sigs = Array.fill(polyphony, { |i|
-    			((index-i).abs < 0.5 ) * rand;
-    		});
-    
-    		polyphony.do { |i|
-    			Out.ar(outBuses[i], sigs[i]);
-    		};
-    
-    	}).add;
+
+		SynthDef(\clock, { |rate = 1, outBuses = #[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]|
+			var rand, index, sigs;
+
+			rand = Dust.ar(rate);
+			index = Stepper.ar(rand, 0, 0, polyphony-1, 1, 0);
+			sigs = Array.fill(polyphony, { |i|
+				((index-i).abs < 0.5 ) * rand;
+			});
+
+			polyphony.do { |i|
+				Out.ar(outBuses[i], sigs[i]);
+			};
+
+		}).add;
 
 		SynthDef(\rando, {|outBus, rate, root, clockBus, quantAmt, rangeBus, freqBus|
 			var freq, sig, pitches, timing, env, randOct, scale;
@@ -160,12 +164,12 @@ Engine_32Harmony : CroneEngine {
 			Out.ar(outBus, sig);
 		}).add;
 
-		SynthDef(\saturation, {|inBus, outBus|
+		SynthDef(\saturation, {|amt=1, inBus, outBus|
 			var sig;
 			sig = In.ar(filterOut, 2);
-			sig = sig / 2;
+			sig = sig * Lag.kr(amt) / 2;
 			sig = (sig - DC.ar(0.6)).tanh + DC.ar(0.535);
-			sig = sig * 2;
+			sig = sig * 2 / Lag.kr(amt);
 			Out.ar(outBus, sig);
 		}).add;
 
@@ -176,10 +180,10 @@ Engine_32Harmony : CroneEngine {
 		audioGrp = Group.tail(modGrp);
 		s.sync;
 		// Create Synths
-		clock1 = Synth(\clock, [rate: rate1In.asMap, \outBuses: clock1Out.collect({|i| i.index})], 
-			  modGrp);
-		clock2 = Synth(\clock, [rate: rate2In.asMap, \outBuses: clock2Out.collect({|i| i.index})], 
-			  modGrp);
+		clock1 = Synth(\clock, [rate: rate1In.asMap, \outBuses: clock1Out.collect({|i| i.index})],
+			modGrp);
+		clock2 = Synth(\clock, [rate: rate2In.asMap, \outBuses: clock2Out.collect({|i| i.index})],
+			modGrp);
 		leftSources = Array.fill(polyphony, {|i|
 			Synth(\rando, [outBus: oscOutL, rate: rate1In.asMap,
 				root: rootIn.asMap, decay: decayIn.asMap, clockBus: clock1Out[i],
@@ -191,9 +195,9 @@ Engine_32Harmony : CroneEngine {
 				quantAmt: quantAmtIn.asMap, rangeBus: range2In, freqBus: freqOutR], audioGrp);
 		});
 		s.sync;
-		filters = Synth.tail(audioGrp, \filters, [lpfCutoff: lpfCutoffIn.asMap, hpfCutoffIn.asMap, outBus: filterOut]);
+		filters = Synth.tail(audioGrp, \filters, [lpfCutoff: lpfCutoffIn.asMap, hpfCutoff: hpfCutoffIn.asMap, outBus: filterOut]);
 		s.sync;
-		saturation = Synth.tail(audioGrp, \saturation, [inBus: filterOut, outBus: 0]);
+		saturation = Synth.tail(audioGrp, \saturation, [amt: saturationAmtIn.asMap, inBus: filterOut, outBus: 0]);
 		// Create MIDI Handlers (todo...?)
 
 		paramMap.keys.do { |name|
@@ -207,8 +211,13 @@ Engine_32Harmony : CroneEngine {
 				};
 			});
 		};
-		
-		}
+
+	}
+
+	*debug {
+		"bus index:".postln;
+		current.filterOut.index.postln;
+	}
 
 	free {
 		modGrp.free;
