@@ -64,5 +64,10 @@ k3 - V chord
 
 
 
-**parameters page**
-attack
+**parameters page**  
+attack  
+saturation  
+range1  
+range2  
+rate1  
+rate2  
