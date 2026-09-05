@@ -155,7 +155,15 @@ function init()
   params:add_control("range", "range", controlspec.new(1, 9, 'lin', 1, 4, 'oct'))
 
   params:add_control("quantize", "quantize", controlspec.new(0, 1, 'lin', 0, 0.6))
-  params:add_control("rate", "rate", controlspec.new(0.1, 20000, 'exp', 0, 1, 'hz'))
+  params:add_taper(
+    "rate",
+    "rate",
+    0,
+    20000,
+    1,
+    8,       -- taper amount
+    "hz"
+)
   params:add_control("cutoff", "cutoff", controlspec.new(20, 20000, 'exp', 0, 4000, 'hz'))
 
   -- advanced controls for params menu
